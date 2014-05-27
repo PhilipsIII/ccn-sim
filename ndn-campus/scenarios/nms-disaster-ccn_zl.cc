@@ -570,45 +570,60 @@ int main (int argc, char *argv[])
 	// With the network assigned, time to randomly obtain clients and servers
 	NS_LOG_INFO ("Obtaining the clients and servers");
 	// Obtain the random lists of server and clients
-	tuple<std::vector<Ptr<Node> >, std::vector<Ptr<Node> > > t = assignClientsandServers(clients, servers);
-
+	//tuple<std::vector<Ptr<Node> >, std::vector<Ptr<Node> > > t = assignClientsandServers(clients, servers);
+	
+	// What we do is make the random not pick servers at all. To do this just makes servers = 0
+	tuple<std::vector<Ptr<Node> >, std::vector<Ptr<Node> > > t = assignClientsandServers(clients, 0);
+	
+	// Note that in this case the clients are still chosen randomly. That is your call
 	// Separate the tuple into clients and servers
 	std::vector<Ptr<Node> > clientVector = t.get<0> ();
-	std::vector<Ptr<Node> > serverVector = t.get<1> ();
-
+	std::vector<Ptr<Node> > serverVector = t.get<1> (); // Now this becomes an empty vector
+	
 	NodeContainer clientNodes;
 	std::vector<uint32_t> clientNodeIds;
 	NodeContainer serverNodes;
 	std::vector<uint32_t> serverNodeIds;
 	
 	// We have to manually introduce the Ptr<Node> to the NodeContainers
-		// We do this to make them easier to control later
-		for (uint32_t i = 0; i < clients ; i++)
-		{
-			Ptr<Node> tmp = clientVector[i];
+	// We do this to make them easier to control later
+	for (uint32_t i = 0; i < clients ; i++)
+	{
+		Ptr<Node> tmp = clientVector[i];
 
-			uint32_t nodeNum = tmp->GetId();
+		uint32_t nodeNum = tmp->GetId();
 
-			sprintf (buffer, "Adding client node: %d", nodeNum);
-			NS_LOG_INFO (buffer);
+		sprintf (buffer, "Adding client node: %d", nodeNum);
+		NS_LOG_INFO (buffer);
 
-			clientNodes.Add(tmp);
-			clientNodeIds.push_back(nodeNum);
-		}
+		clientNodes.Add(tmp);
+		clientNodeIds.push_back(nodeNum);
+	}
 
-		// Do the same for the server NodeContainer
-		for (uint32_t i = 0; i < servers; i++)
-		{
-			Ptr<Node> tmp = serverVector[i];
+	// Do the same for the server NodeContainer - This is also empty
+	for (uint32_t i = 0; i < servers; i++)
+	{
+		Ptr<Node> tmp = serverVector[i];
 
-			uint32_t nodeNum = tmp->GetId();
+		uint32_t nodeNum = tmp->GetId();
 
-			sprintf (buffer, "Adding server node: %d", nodeNum);
-			NS_LOG_INFO (buffer);
+		sprintf (buffer, "Adding server node: %d", nodeNum);
+		NS_LOG_INFO (buffer);
 
-			serverNodes.Add(tmp);
-			serverNodeIds.push_back(nodeNum);
-		}
+		serverNodes.Add(tmp);
+		serverNodeIds.push_back(nodeNum);
+	}
+
+	
+	// Since I don't have a list of the Nodes, I will use the same trick as the randomize function. Create
+	// a global container
+	NodeContainer global = NodeContainer::GetGlobal ();
+	
+	// Now we need to statically choose a server. Pick a number. I will go with 137
+	serverNodesIds.push_back (137);
+	serverNodes.Add(global.Get(137));
+	
+	// Everything else can be maintained, at least in theory.
 
 	
 	/*// Create Traffic Flows
